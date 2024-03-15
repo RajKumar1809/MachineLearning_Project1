@@ -1,3 +1,4 @@
+import os
 import sys
 from dataclasses import dataclass
 
@@ -10,18 +11,20 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from src.exception import CustomException
 from src.logger import logging
-import os
-from src.utils import save_obj
+from src.utils import save_object
 
 @dataclass
 class DataTransformationConfig:
-    preproccessor_obj_file_path = os.path.join('artfacts', "preprocessor.pkl")
+    preproccessor_obj_file_path = os.path.join("artifacts", "preprocessor.pkl")
 
 class DataTransformation:
     def __init__(self):
         self.data_transformation_config=DataTransformationConfig()
 
     def get_data_transformer_object(self):
+        '''
+        This function is resposible for data transformation
+        '''
         try:
             numerical_columns = ["writing_score", "reading_score"]
             categorical_columns = [
@@ -43,17 +46,17 @@ class DataTransformation:
                 steps=[
                     ("imputer",SimpleImputer(strategy="most_frequent")),
                     ("one hot encoder", OneHotEncoder()),
-                    ("scaler", StandardScaler())
+                    ("scaler", StandardScaler(with_mean=False))
                 ]
             )
 
-            logging.info("Numerical Columns Standard scaling Completed")
+            logging.info(f"Categorical columns: {categorical_columns}")
 
-            logging.info("Categorical Columns Encoding Completed")
+            logging.info(f"Numerical columns: {numerical_columns}")
 
             preprocessor=ColumnTransformer(
                 [
-                ("Num_Pipeline", num_pipeline, numerical_columns)
+                ("Num_Pipeline", num_pipeline, numerical_columns),
                 ("Cat_Pipeline", cat_pipeline, categorical_columns)
 
                 ]
@@ -86,7 +89,7 @@ class DataTransformation:
             target_feature_test_df = test_df[target_column_name]
 
             logging.info(
-                f'Applying preprocessing object on training dataframe and testing dataframe'
+                f"Applying preprocessing object on training dataframe and testing dataframe."
             )
 
             input_feature_train_arr=preprocessing_obj.fit_transform(input_feature_train_df)
@@ -111,4 +114,5 @@ class DataTransformation:
             )
 
         except Exception as e:
-            raise CustomException(e, sys)
+            raise CustomException(e,sys)
+        
